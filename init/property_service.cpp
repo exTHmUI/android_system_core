@@ -1296,12 +1296,12 @@ static void ProcessBootconfig() {
     });
 }
 
-static void SetSafetyNetProps() {
-    InitPropertySet("ro.boot.flash.locked", "1");
-    InitPropertySet("ro.boot.verifiedbootstate", "green");
-    InitPropertySet("ro.boot.veritymode", "enforcing");
-    InitPropertySet("ro.boot.vbmeta.device_state", "locked");
-}
+//static void SetSafetyNetProps() {
+//    InitPropertySet("ro.boot.flash.locked", "1");
+//    InitPropertySet("ro.boot.verifiedbootstate", "green");
+//    InitPropertySet("ro.boot.veritymode", "enforcing");
+//    InitPropertySet("ro.boot.vbmeta.device_state", "locked");
+//}
 
 void PropertyInit() {
     selinux_callback cb;
