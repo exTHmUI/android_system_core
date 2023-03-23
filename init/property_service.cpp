@@ -1151,9 +1151,7 @@ void PropertyLoadBootDefaults() {
     // Restore the normal property override security after init extension is executed
     weaken_prop_override_security = false;
 
-    if (android::base::GetBoolProperty("ro.persistent_properties.ready", false)) {
-        update_sys_usb_config();
-    }
+    update_sys_usb_config();
 }
 
 bool LoadPropertyInfoFromFile(const std::string& filename,
@@ -1406,7 +1404,8 @@ void StartPropertyService(int* epoll_socket) {
     StartSendingMessages();
 
     if (auto result = CreateSocket(PROP_SERVICE_NAME, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK,
-                                   false, 0666, 0, 0, {});
+                                   /*passcred=*/false, /*should_listen=*/false, 0666, /*uid=*/0,
+                                   /*gid=*/0, /*socketcon=*/{});
         result.ok()) {
         property_set_fd = *result;
     } else {

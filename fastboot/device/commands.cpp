@@ -254,7 +254,6 @@ bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args)
         return device->WriteStatus(FastbootResult::FAIL, ret.message);
     }
 
-    device->WriteInfo(ret.message);
     return device->WriteStatus(FastbootResult::OKAY, ret.message);
 }
 

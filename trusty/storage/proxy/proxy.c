@@ -116,10 +116,11 @@ static int drop_privs(void) {
 static int handle_req(struct storage_msg* msg, const void* req, size_t req_len) {
     int rc;
 
-    if ((msg->flags & STORAGE_MSG_FLAG_POST_COMMIT) && (msg->cmd != STORAGE_RPMB_SEND)) {
+    if ((msg->flags & STORAGE_MSG_FLAG_POST_COMMIT) && msg->cmd != STORAGE_RPMB_SEND &&
+        msg->cmd != STORAGE_FILE_WRITE) {
         /*
-         * handling post commit messages on non rpmb commands are not
-         * implemented as there is no use case for this yet.
+         * handling post commit messages on commands other than rpmb and write
+         * operations are not implemented as there is no use case for this yet.
          */
         ALOGE("cmd 0x%x: post commit option is not implemented\n", msg->cmd);
         msg->result = STORAGE_ERR_UNIMPLEMENTED;
@@ -129,6 +130,21 @@ static int handle_req(struct storage_msg* msg, const void* req, size_t req_len) 
     if (msg->flags & STORAGE_MSG_FLAG_PRE_COMMIT) {
         rc = storage_sync_checkpoint();
         if (rc < 0) {
+            msg->result = STORAGE_ERR_SYNC_FAILURE;
+            return ipc_respond(msg, NULL, 0);
+        }
+    }
+
+    if (msg->flags & STORAGE_MSG_FLAG_PRE_COMMIT_CHECKPOINT) {
+        bool is_checkpoint_active = false;
+
+        rc = is_data_checkpoint_active(&is_checkpoint_active);
+        if (rc != 0) {
+            ALOGE("is_data_checkpoint_active failed in an unexpected way. Aborting.\n");
+            msg->result = STORAGE_ERR_GENERIC;
+            return ipc_respond(msg, NULL, 0);
+        } else if (is_checkpoint_active) {
+            ALOGE("Checkpoint in progress, dropping write ...\n");
             msg->result = STORAGE_ERR_GENERIC;
             return ipc_respond(msg, NULL, 0);
         }

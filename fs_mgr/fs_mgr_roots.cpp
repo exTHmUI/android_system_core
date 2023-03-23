@@ -123,7 +123,6 @@ bool TryPathMount(FstabEntry* rec, const std::string& mount_pt) {
     }
 
     int result = fs_mgr_do_mount_one(*rec, mount_point);
-
     if (result == -1) {
         PERROR << "Failed to mount " << mount_point;
         return false;
