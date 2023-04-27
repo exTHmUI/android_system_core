@@ -982,35 +982,6 @@ on post-fs-data
 
     exec_start derive_sdk
 
-    # Delete these if need be, per b/139193659
-    mkdir /data/rollback 0700 system system encryption=DeleteIfNecessary
-    mkdir /data/rollback-observer 0700 system system encryption=DeleteIfNecessary
-    mkdir /data/rollback-history 0700 system system encryption=DeleteIfNecessary
-
-    # Create root dir for Incremental Service
-    mkdir /data/incremental 0771 system system encryption=Require
-
-    # Create directories for statsd
-    mkdir /data/misc/stats-active-metric/ 0770 statsd system
-    mkdir /data/misc/stats-data/ 0770 statsd system
-    mkdir /data/misc/stats-metadata/ 0770 statsd system
-    mkdir /data/misc/stats-service/ 0770 statsd system
-    mkdir /data/misc/train-info/ 0770 statsd system
-
-    # Wait for apexd to finish activating APEXes before starting more processes.
-    wait_for_prop apexd.status activated
-    perform_apex_config
-
-    # Special-case /data/media/obb per b/64566063
-    mkdir /data/media 0770 media_rw media_rw encryption=None
-    exec - media_rw media_rw -- /system/bin/chattr +F /data/media
-    mkdir /data/media/obb 0770 media_rw media_rw encryption=Attempt
-
-    # Create directories for boot animation.
-    mkdir /data/bootanim 0755 system system encryption=DeleteIfNecessary
-
-    exec_start derive_sdk
-
     init_user0
 
     # Set SELinux security contexts on upgrade or policy update.

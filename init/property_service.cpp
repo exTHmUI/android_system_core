@@ -119,8 +119,6 @@ struct PropertyAuditData {
     const char* name;
 };
 
-static bool weaken_prop_override_security = false;
-
 static int PropertyAuditCallback(void* data, security_class_t /*cls*/, char* buf, size_t len) {
     auto* d = reinterpret_cast<PropertyAuditData*>(data);
 
@@ -191,8 +189,8 @@ static uint32_t PropertySet(const std::string& name, const std::string& value, s
 
     prop_info* pi = (prop_info*) __system_property_find(name.c_str());
     if (pi != nullptr) {
-        // ro.* properties are actually "write-once", unless the system decides to
-        if (StartsWith(name, "ro.") && !weaken_prop_override_security) {
+        // ro.* properties are actually "write-once".
+        if (StartsWith(name, "ro.")) {
             *error = "Read-only property was already set";
             return PROP_ERROR_READ_ONLY_PROPERTY;
         }
@@ -1135,21 +1133,12 @@ void PropertyLoadBootDefaults() {
         }
     }
 
-    // Weaken property override security during execution of the vendor init extension
-    weaken_prop_override_security = true;
-
-    // Update with vendor-specific property runtime overrides
-    vendor_load_properties();
-
     property_initialize_ro_product_props();
     property_initialize_build_id();
     property_derive_build_fingerprint();
     property_derive_legacy_build_fingerprint();
     property_initialize_ro_cpu_abilist();
     property_initialize_ro_vendor_api_level();
-
-    // Restore the normal property override security after init extension is executed
-    weaken_prop_override_security = false;
 
     update_sys_usb_config();
 }
@@ -1294,13 +1283,6 @@ static void ProcessBootconfig() {
     });
 }
 
-//static void SetSafetyNetProps() {
-//    InitPropertySet("ro.boot.flash.locked", "1");
-//    InitPropertySet("ro.boot.verifiedbootstate", "green");
-//    InitPropertySet("ro.boot.veritymode", "enforcing");
-//    InitPropertySet("ro.boot.vbmeta.device_state", "locked");
-//}
-
 void PropertyInit() {
     selinux_callback cb;
     cb.func_audit = PropertyAuditCallback;
@@ -1314,12 +1296,6 @@ void PropertyInit() {
     if (!property_info_area.LoadDefaultPath()) {
         LOG(FATAL) << "Failed to load serialized property info file";
     }
-
-    // Report a valid verified boot chain to make Google SafetyNet integrity
-    // checks pass. This needs to be done before parsing the kernel cmdline as
-    // these properties are read-only and will be set to invalid values with
-    // androidboot cmdline arguments.
-    // SetSafetyNetProps();
 
     // If arguments are passed both on the command line and in DT,
     // properties set in DT always have priority over the command-line ones.

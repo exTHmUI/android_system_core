@@ -150,21 +150,6 @@ static int handle_req(struct storage_msg* msg, const void* req, size_t req_len) 
         }
     }
 
-    if (msg->flags & STORAGE_MSG_FLAG_PRE_COMMIT_CHECKPOINT) {
-        bool is_checkpoint_active = false;
-
-        rc = is_data_checkpoint_active(&is_checkpoint_active);
-        if (rc != 0) {
-            ALOGE("is_data_checkpoint_active failed in an unexpected way. Aborting.\n");
-            msg->result = STORAGE_ERR_GENERIC;
-            return ipc_respond(msg, NULL, 0);
-        } else if (is_checkpoint_active) {
-            ALOGE("Checkpoint in progress, dropping write ...\n");
-            msg->result = STORAGE_ERR_GENERIC;
-            return ipc_respond(msg, NULL, 0);
-        }
-    }
-
     switch (msg->cmd) {
         case STORAGE_FILE_DELETE:
             rc = storage_file_delete(msg, req, req_len);
